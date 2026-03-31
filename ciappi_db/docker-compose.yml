@@ -1,0 +1,59 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: db-ciappi
+    restart: always
+
+    # =============================
+    # 🌍 Configurações de ambiente
+    # =============================
+    env_file:
+      - ../.env
+
+    # =============================
+    # ⚙️ Comandos adicionais MySQL
+    # =============================
+    command:
+      [
+        "--default-authentication-plugin=mysql_native_password",
+        "--character-set-server=utf8mb4",
+        "--collation-server=utf8mb4_unicode_ci",
+        "--explicit_defaults_for_timestamp=1",
+        "--lower_case_table_names=1",
+        "--innodb_file_per_table=1",
+        "--skip-host-cache",
+        "--skip-name-resolve",
+        "--log-bin-trust-function-creators=1",
+        "--default-time-zone=${TZ}",
+        "--local-infile=1",
+        "--secure-file-priv=",
+      ]
+
+    # =============================
+    # 📁 Volumes e persistência
+    # =============================
+    volumes:
+      - mysql_ciappi_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+
+    # =============================
+    # 🌐 Exposição de portas
+    # =============================
+    ports:
+      - "${DB_PORT}:3306"
+
+    # =============================
+    # 🩺 Healthcheck
+    # =============================
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  mysql_ciappi_data:
+    driver: local

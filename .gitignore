@@ -1,0 +1,94 @@
+# ============================================
+# 🚫 GITIGNORE - APP CIAPPI
+# ============================================
+
+# 🐍 Python Virtual Environments
+venv/
+venv-backend/
+venv-frontend/
+env/
+.env.local
+.env.*.local
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# 🧱 Build / Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+mvnw
+mvnw.cmd
+
+# ⚙️ IDEs
+.idea/
+*.iml
+.vscode/
+*.class
+*.log
+*.swp
+
+# 🧩 Spring Boot
+application-local.properties
+application-dev.properties
+application-test.properties
+application-prod.properties
+.env
+
+# 🧱 Docker
+docker/mysql/init/*.sql
+mysql_data/
+*.bak
+*.sql
+*.dump
+backup_*.sql
+
+# 🧰 Logs
+*.log
+logs/
+*.out
+
+# 🧾 Sistema
+.DS_Store
+Thumbs.db
+
+# 📦 Node (caso use frontend no mesmo repo)
+node_modules/
+dist/
+
+# ⚙️ Testes e reports
+test-output/
+coverage/
+
+# 📊 Dados sensíveis
+*.csv
+arq/csv/
+
+# 🗄️ Banco de dados
+*.db
+*.sqlite
+*.sqlite3
+*.mdb
+*.accdb
+arq/*.accdb
+arq/*.laccdb

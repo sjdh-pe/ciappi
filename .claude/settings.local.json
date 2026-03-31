@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker ps:*)",
+      "Bash(find /Users/raulfranca/Desktop/MySQL/MySQL-ciappi -type f ! -path */node_modules/* ! -path */.git/* ! -path */.DS_Store ! -path */.* ! -name .env* ! -name docker-compose.yml ! -name *.csv ! -name *.accdb ! -name *.laccdb)"
+    ]
+  }
+}
