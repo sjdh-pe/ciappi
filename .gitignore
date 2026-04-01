@@ -47,6 +47,8 @@ mvnw.cmd
 *.class
 *.log
 *.swp
+.claude
+.claude/
 
 # 🧩 Spring Boot
 application-local.properties

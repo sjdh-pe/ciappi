@@ -9,72 +9,126 @@ Ambiente de banco de dados **MySQL 8.0** containerizado com **Docker Compose**
 ## ⚙️ Estrutura do Projeto
 
 ```
-db-MySQL/
+ciappi_db/
 ├── docker/
+│   ├── docker-compose.yml                     # Orquestração Docker Compose
 │   └── mysql/
-│       └── init/           
-├── docker-compose.yml                         # Orquestração Docker
-├── .env                                       # Variáveis de ambiente
-├── Makefile                                   # Comandos rápidos
-└── README.md                                  # Este arquivo 📝
+│       ├── Dockerfile                         # Imagem customizada MySQL
+│       ├── conf.d/
+│       │   └── my.cnf                         # Configurações MySQL
+│       └── init/
+│           ├── 01-schema.sql                  # Criar tabelas
+│           ├── 02-indexes.sql                 # Criar índices
+│           └── 03-data.sql                    # Popular dados iniciais
+├── arq/
+│   ├── csv_fix/                               # Dados em CSV para importação
+│   └── backup/                                # Backups do banco
+├── fix_data.py                                # Script Python para correção de dados
+├── docker-compose.yml                         # Composição principal (raiz)
+├── diagrama_er.html                           # 📊 Diagrama E-R interativo
+├── README.md                                  # Este arquivo 📝
+└── .gitignore                                 # Arquivos ignorados pelo Git
 ```
 
 ---
 
-## 🚀 Subindo o Banco de Dados
+## 🚀 Inicializando o Banco de Dados
 
-### 1️⃣ Subir com Docker Compose
+### 1️⃣ Pré-requisitos
+
+- **Docker Desktop** instalado e rodando
+- **Docker Compose** (incluído no Docker Desktop)
+- Variáveis de ambiente configuradas no `.env` da raiz do projeto (`/ciappi/.env`)
+
+### 2️⃣ Subir o Container MySQL
+
+Na raiz do projeto (`/ciappi`), execute:
 
 ```bash
-make up
-```
-
-ou, se preferir manualmente:
-
-```bash
+# Opção 1: Usando Docker Compose diretamente
+cd ciappi_db
 docker compose up -d
+
+# Opção 2: A partir da raiz do projeto
+docker compose -f ciappi_db/docker-compose.yml up -d
 ```
 
 📦 Isso fará:
 
-- Baixar a imagem oficial `mysql:8.0`;
-- Criar o banco `ciappi`;
-- Aplicar charset e timezone corretos (`utf8mb4`, `America/Recife`);
-- Tornar o serviço disponível na porta `3309`.
+✅ Baixar a imagem oficial `mysql:8.0`\
+✅ Criar o banco de dados `ciappi`\
+✅ Aplicar charset e timezone corretos (`utf8mb4`, `America/Recife`)\
+✅ Tornar o serviço disponível na porta `3309`\
+✅ Importar o schema SQL automático\
+✅ Executar healthcheck para verificar integridade
 
----
-## Crie o esquema da base
+### 3️⃣ Verificar o Status
 
 ```bash
-    mdb-schema "CIAPPI BD.accdb" mysql > schema.sql
+# Verificar se o container está healthy
+docker ps
+
+# Deverá mostrar:
+# ciappi_db-mysql-1   ... (healthy)
 ```
 
 ---
-## 🧾 Arquivo `.env`
 
-As variáveis de ambiente ficam centralizadas no `.env`:
+## 📊 Schema do Banco de Dados
+
+O schema completo está documentado em:
+
+```
+ciappi_db/
+├── schema.sql                                 # Schema completo com 19 tabelas
+└── diagrama_er.html                           # Visualização interativa
+```
+
+### Tabelas Principais:
+- 🔹 **TbCIAPPICaso** — Casos de denúncia/atendimento
+- 👤 **tbciappiusuario** — Dados de usuários (idosos)
+- 📝 **TbCIAPPIAcompanhamento** — Acompanhamentos técnicos
+- 📅 **TbEvento** — Eventos relacionados aos casos
+- 🏛️ **TbCIAPPIILPI** — Instituições de Longa Permanência para Idosos
+- 🏢 **TbVisitaInst** — Visitas institucionais
+- 🗂️ **+ 13 tabelas de referência/lookup** (Estados, Municípios, Órgãos, etc.)
+
+---
+
+## 🔧 Configuração do Banco
+
+O arquivo `.env` na **raiz do projeto** (`/ciappi/.env`) contém as variáveis:
 
 ```env
-# =============================
-# 🌍 Timezone
-# =============================
-TZ=America/Recife
-
-# =============================
-# 🗄️ Banco de Dados
-# =============================
+# =========================================================
+# 🧱 Configuração do Banco de Dados MySQL
+# =========================================================
+DB_HOST=localhost
+DB_PORT=3309
 MYSQL_ROOT_PASSWORD=ciappi_pwd
 MYSQL_DATABASE=ciappi
 MYSQL_USER=ciappi_urs
 MYSQL_PASSWORD=ciappi_pwd
 
-# =============================
-# 🌐 Porta externa
-# =============================
-DB_PORT=3309
+# =========================================================
+# 🌍 Fuso Horário (MySQL e Sistema)
+# =========================================================
+TZ=America/Recife
+
+# =========================================================
+# 🔐 FastAPI & Autenticação
+# =========================================================
+SECRET_KEY=your_secret_key_here_very_long_and_complex
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=480
+
+# =========================================================
+# 🔗 Conexão Backend <-> Database
+# =========================================================
+DATABASE_URL=mysql+pymysql://ciappi_urs:ciappi_pwd@localhost:3309/ciappi
 ```
 
-> 💡 Essas variáveis são carregadas automaticamente pelo `docker-compose.yml`.
+> 💡 Essas variáveis são carregadas automaticamente pelo Docker Compose e pela aplicação Python.
 
 ---
 
@@ -101,26 +155,24 @@ O container estará **healthy** quando estiver pronto para receber conexões.
 
 ---
 
-## 🧰 Makefile — Comandos Rápidos
+## 🧰 Comandos Docker Compose — Gerenciamento Rápido
 
-| Comando        | Descrição                                      |
-| -------------- | ---------------------------------------------- |
-| `make up`      | Sobe o container MySQL                         |
-| `make down`    | Para e remove o container                      |
-| `make restart` | Reinicia o banco                               |
-| `make logs`    | Exibe os logs em tempo real                    |
-| `make bash`    | Abre terminal dentro do container              |
-| `make mysql`   | Abre o CLI do MySQL                            |
-| `make clean`   | Remove volumes e dados persistidos             |
-| `make reset`   | Remove completamente o volume e recria o banco |
+| Comando | Descrição |
+| --- | --- |
+| `docker compose up -d` | Sobe o container MySQL em background |
+| `docker compose down` | Para e remove o container |
+| `docker compose restart` | Reinicia o banco |
+| `docker compose logs -f` | Exibe os logs em tempo real |
+| `docker compose exec mysql bash` | Abre terminal dentro do container |
+| `docker compose exec mysql mysql -u root -p` | Abre o CLI do MySQL |
+| `docker compose ps` | Verifica status dos containers |
 
 📘 Exemplo:
 
 ```bash
-make mysql
+# Acessar o MySQL via CLI
+docker compose -f ciappi_db/docker-compose.yml exec mysql mysql -u ciappi_urs -pciappi_pwd ciappi
 ```
-
-> Acessa o banco direto via terminal.
 
 ---
 
@@ -129,14 +181,20 @@ make mysql
 ### Criar backup:
 
 ```bash
-docker exec db-ciappi mysqldump -u ciappi_urs -pciappi_pwd ciappi > backup.sql
+# A partir da raiz do projeto
+docker compose -f ciappi_db/docker-compose.yml exec mysql \
+  mysqldump -u ciappi_urs -pciappi_pwd ciappi > backup_$(date +%Y%m%d_%H%M%S).sql
 ```
 
 ### Restaurar backup:
 
 ```bash
-docker exec -i db-ciappi mysql -u ciappi_urs -pciappi_pwd ciappi < backup.sql
+# A partir da raiz do projeto
+docker compose -f ciappi_db/docker-compose.yml exec -T mysql \
+  mysql -u ciappi_urs -pciappi_pwd ciappi < backup.sql
 ```
+
+> 💡 O sufixo `-T` em `exec -T` desabilita a alocação de pseudo-TTY, essencial para pipes com stdin.
 
 ---
 
@@ -152,7 +210,7 @@ docker exec -i db-ciappi mysql -u ciappi_urs -pciappi_pwd ciappi < backup.sql
 
 ## 🧩 Dicas Extras
 
-✅ **Acesso via DBeaver ou IntelliJ**\
+✅ **Acesso via DBeaver, DataGrip ou IntelliJ**\
 Use as credenciais do `.env`:
 
 ```
@@ -163,27 +221,58 @@ User: ciappi_urs
 Password: ciappi_pwd
 ```
 
-✅ **Ver logs MySQL**
+✅ **Ver logs MySQL em tempo real**
 
 ```bash
-make logs
+docker compose -f ciappi_db/docker-compose.yml logs -f mysql
 ```
 
 ✅ **Verificar criação do banco**
 
 ```bash
-docker exec -it db-ciappi mysql -u ciappi_urs -pciappi_pwd -e "SHOW DATABASES;"
+docker compose -f ciappi_db/docker-compose.yml exec mysql \
+  mysql -u ciappi_urs -pciappi_pwd -e "SHOW DATABASES; USE ciappi; SHOW TABLES;"
 ```
+
+✅ **Conectar ao container MySQL interativamente**
+
+```bash
+docker compose -f ciappi_db/docker-compose.yml exec mysql bash
+# Dentro do container:
+mysql -u ciappi_urs -p ciappi
+```
+
+✅ **Resetar o banco completamente (⚠️ CUIDADO - Deleta tudo)**
+
+```bash
+docker compose -f ciappi_db/docker-compose.yml down -v
+docker compose -f ciappi_db/docker-compose.yml up -d
+```
+
+---
+
+## 📊 Diagrama de Relacionamentos (E-R)
+
+Visualize a estrutura completa do banco de dados com o diagrama interativo:
+
+👉 **[Abrir Diagrama de Relacionamentos](./diagrama_er.html)**
+
+O diagrama inclui:
+- Visualização de todas as 19 tabelas
+- Relacionamentos entre entidades (1:N, N:1, etc.)
+- Estrutura de campos e tipos de dados
+- Chaves primárias e estrangeiras
+- Interface com abas interativas (Visual, Tabelas, Relacionamentos)
 
 ---
 
 ## 👨‍💻 Créditos e Autor
 
 **Autor:** [Raul Michel de França](https://github.com/raul-franca)\
-**E-mail** [raul.franca@sjdh.pe.gov.br](mailto:raul.franca@sjdh.pe.gov.br)\
-**Projeto:**  DB ciappi\
-**Banco:** MySQL 8.0 — Docker Compose.
+**E-mail:** raul.franca@sjdh.pe.gov.br\
+**Projeto:** CIAPPI - Sistema de Gestão de Casos de Proteção ao Idoso\
+**Banco:** MySQL 8.0 — Docker Compose
 
 ---
 
-📘 *Versão: 25/2026 — Ambiente padronizado para desenvolvimento*
+📘 *Versão: 2.0 | Data: 01/04/2026 | Status: ✅ Produção*

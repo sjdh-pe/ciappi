@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagrama E-R - CIAPPI Database</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .info-section {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+        }
+
+        .info-section h2 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .info-section p {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .tab-button {
+            padding: 12px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button:hover {
+            background: #f0f2ff;
+            transform: translateY(-2px);
+        }
+
+        .tab-button.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .diagram-container {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            overflow-x: auto;
+            margin-bottom: 30px;
+        }
+
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            background: white;
+            padding: 20px;
+        }
+
+        .tables-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .table-card {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .table-card:hover {
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-4px);
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .table-body {
+            padding: 15px;
+        }
+
+        .column {
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.95em;
+        }
+
+        .column:last-child {
+            border-bottom: none;
+        }
+
+        .column-name {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .column-type {
+            color: #999;
+            font-size: 0.85em;
+        }
+
+        .pk {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.75em;
+            margin-left: 5px;
+            color: #856404;
+            font-weight: 600;
+        }
+
+        .fk {
+            background: #cfe2ff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.75em;
+            margin-left: 5px;
+            color: #084298;
+            font-weight: 600;
+        }
+
+        .relationships {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .relationships h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .relationship-item {
+            padding: 10px;
+            background: white;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.95;
+        }
+
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-icon {
+            width: 30px;
+            height: 20px;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7em;
+            font-weight: 600;
+            color: white;
+        }
+
+        .legend-pk {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .legend-fk {
+            background: #0d6efd;
+        }
+
+        footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #999;
+            font-size: 0.9em;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .print-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .print-button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .header {
+                page-break-after: always;
+            }
+            .tab-button {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            .tables-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗄️ Diagrama E-R: CIAPPI Database</h1>
+            <p>Sistema de Informações da Proteção Social Especial para Pessoa Idosa</p>
+        </div>
+
+        <div class="content">
+            <!-- Statistics -->
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value">19</div>
+                    <div class="stat-label">Tabelas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">+150</div>
+                    <div class="stat-label">Colunas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">MySQL 8.0</div>
+                    <div class="stat-label">Banco de Dados</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">UTF-8</div>
+                    <div class="stat-label">Charset</div>
+                </div>
+            </div>
+
+            <!-- Info Section -->
+            <div class="info-section">
+                <h2>📋 Sobre o Diagrama</h2>
+                <p>Este diagrama apresenta a estrutura completa do banco de dados CIAPPI, incluindo todas as tabelas, relacionamentos e campos. O banco foi migrado do Microsoft Access para MySQL 8.0 e foi otimizado para melhor performance e integridade de dados.</p>
+            </div>
+
+            <!-- Legend -->
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-icon legend-pk">PK</div>
+                    <span>Primary Key (Chave Primária)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-icon legend-fk">FK</div>
+                    <span>Foreign Key (Chave Estrangeira)</span>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-button active" onclick="switchTab('diagram')">📊 Diagrama Visual</button>
+                <button class="tab-button" onclick="switchTab('tables')">📑 Tabelas</button>
+                <button class="tab-button" onclick="switchTab('relationships')">🔗 Relacionamentos</button>
+            </div>
+
+            <!-- Diagram Tab -->
+            <div id="diagram" class="tab-content active">
+                <button class="print-button" onclick="window.print()">🖨️ Imprimir</button>
+                <div class="diagram-container">
+                    <div class="mermaid">
+erDiagram
+    TbCIAPPICaso ||--o{ tbciappiusuario : "contém"
+    TbCIAPPICaso ||--o{ TbCIAPPIAcompanhamento : "possui"
+    TbCIAPPICaso ||--o{ TbEvento : "registra"
+    TbCIAPPIILPI ||--o{ TbVisitaInst : "recebe visitas"
+    tbciappiusuario ||--o{ TbUltMov : "possui"
+    TbMotivoAtendimento ||--o{ TbCIAPPICaso : "referencia"
+    TbMotivoEncerramento ||--o{ TbCIAPPICaso : "referencia"
+    TbEstado ||--o{ TbMunicipio : "contém"
+    TbTipoEvento ||--o{ TbEvento : "classifica"
+    TbOrgao ||--o{ TbCIAPPIAcompanhamento : "referencia"
+
+    TbCIAPPICaso {
+        int TbCasoNumCaso PK
+        datetime TbCasoDtinicio
+        string tbnomeidoso
+        string Tbambienteviolencia
+        text TbCasoRelato
+        string TbCasoMunicipio
+        datetime TbCasoDtencer
+        string TbCasoEncerrado
+    }
+
+    tbciappiusuario {
+        int tbnumerocadastro PK
+        int tbcaso FK
+        datetime tbdtcadastro
+        string tbnome
+        datetime tbdtnascimento
+        string tbsexo
+        string tbcpf
+        string tblogradouro
+        string tbescolaridade
+    }
+
+    TbCIAPPIAcompanhamento {
+        int tbcodigo PK
+        int TbAcomCaso FK
+        datetime TbAcompdata
+        string TbAcompOrgao
+        string TbAcompAcao
+        string TbAcompStatus
+        datetime TbAcompPrazo
+        text TbRelato
+    }
+
+    TbEvento {
+        int Código PK
+        string tbtipoevento
+        datetime Tbdataprevista
+        int TbPublicoEstimado
+        datetime TbDataRealizacao
+    }
+
+    TbCIAPPIILPI {
+        int CODIGOILPI PK
+        datetime DATACADASTRO
+        string NOMEILPI
+        string RESPONSAVELILPI
+        int CAPACIDADEIDOSOS
+        string MUNICIPIO
+        string STATUS
+    }
+
+    TbVisitaInst {
+        int codigovisita PK
+        string nomeinstituicao
+        datetime datavista
+        string assuntovisita
+    }
+
+    TbMotivoAtendimento {
+        int Código PK
+        string TbDescricaoMotivo
+    }
+
+    TbMotivoEncerramento {
+        int Código PK
+        string descricaomotivo
+    }
+
+    TbEstado {
+        string ufestado PK
+        string estado
+    }
+
+    TbMunicipio {
+        int codigo PK
+        string município
+    }
+
+    TbTipoEvento {
+        int codigo PK
+        string tipoevento
+    }
+
+    TbOrgao {
+        int CodigoOrgao PK
+        string TbNomeOrgao
+        string TbSiglaOrgao
+    }
+
+    TbUltMov {
+        int Ccontrole PK
+        int NumCaso FK
+        datetime Dataultmov
+        string Ultmov
+    }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tables Tab -->
+            <div id="tables" class="tab-content">
+                <h2 style="margin-bottom: 20px; color: #667eea;">📑 Estrutura das Tabelas Principais</h2>
+
+                <div class="tables-grid">
+                    <!-- TbCIAPPICaso -->
+                    <div class="table-card">
+                        <div class="table-header">TbCIAPPICaso</div>
+                        <div class="table-body">
+                            <div class="column"><span class="column-name">TbCasoNumCaso</span> <span class="pk">PK</span><div class="column-type">int - PRIMARY KEY</div></div>
+                            <div class="column"><span class="column-name">TbCasoDtinicio</span><div class="column-type">datetime</div></div>
+                            <div class="column"><span class="column-name">tbnomeidoso</span><div class="column-type">varchar(255)</div></div>
+                            <div class="column"><span class="column-name">Tbambienteviolencia</span><div class="column-type">varchar(255)</div></div>
+                            <div class="column"><span class="column-name">TbCasoRelato</span><div class="column-type">text</div></div>
+                            <div class="column"><span class="column-name">TbCasoMunicipio</span><div class="column-type">varchar(255)</div></div>
+                            <div class="column"><span class="column-name">TbCasoDtencer</span><div class="column-type">datetime</div></div>
+                        </div>
+                    </div>
+
+                    <!-- tbciappiusuario -->
+                    <div class="table-card">
+                        <div class="table-header">tbciappiusuario</div>
+                        <div class="table-body">
+                            <div class="column"><span class="column-name">tbnumerocadastro</span> <span class="pk">PK</span><div class="column-type">int - AUTO_INCREMENT</div></div>
+                            <div class="column"><span class="column-name">tbcaso</span> <span class="fk">FK</span><div class="column-type">int</div></div>
+                            <div class="column"><span class="column-name">tbdtcadastro</span><div class="column-type">datetime</div></div>
+                            <div class="column"><span class="column-name">tbnome</span><div class="column-type">text</div></div>
+                            <div class="column"><span class="column-name">tbdtnascimento</span><div class="column-type">datetime</div></div>
+                            <div class="column"><span class="column-name">tbsexo</span><div class="column-type">varchar(1)</div></div>
+                            <div class="column"><span class="column-name">tbcpf</span><div class="column-type">text</div></div>
+                        </div>
+                    </div>
+
+                    <!-- TbCIAPPIAcompanhamento -->
+                    <div class="table-card">
+                        <div class="table-header">TbCIAPPIAcompanhamento</div>
+                        <div class="table-body">
+                            <div class="column"><span class="column-name">tbcodigo</span> <span class="pk">PK</span><div class="column-type">int - AUTO_INCREMENT</div></div>
+                            <div class="column"><span class="column-name">TbAcomCaso</span> <span class="fk">FK</span><div class="column-type">int</div></div>
+                            <div class="column"><span class="column-name">TbAcompdata</span><div class="column-type">datetime</div></div>
+                            <div class="column"><span class="column-name">TbAcompOrgao</span><div class="column-type">varchar(255)</div></div>
+                            <div class="column"><span class="column-name">TbAcompAcao</span><div class="column-type">varchar(255)</div></div>
+                            <div class="column"><span class="column-name">TbAcompStatus</span><div class="column-type">varchar(255)</div></div>
+                            <div class="column"><span class="column-name">TbRelato</span><div class="column-type">text</div></div>
+                        </div>
+                    </div>
+
+                    <!-- TbEvento -->
+                    <div class="table-card">
+                        <div class="table-header">TbEvento</div>
+                        <div class="table-body">
+                            <div class="column"><span class="column-name">Código</span> <span class="pk">PK</span><div class="column-type">int - AUTO_INCREMENT</div></div>
+                            <div class="column"><span class="column-name">tbtipoevento</span><div class="column-type">varchar(255)</div></div>
+                            <div class="column"><span class="column-name">Tbdataprevista</span><div class="column-type">datetime</div></div>
+                            <div class="column"><span class="column-name">TbPublicoEstimado</span><div class="column-type">int</div></div>
+                            <div class="column"><span class="column-name">TbDataRealizacao</span><div class="column-type">datetime</div></div>
+                        </div>
+                    </div>
+
+                    <!-- TbCIAPPIILPI -->
+                    <div class="table-card">
+                        <div class="table-header">TbCIAPPIILPI</div>
+                        <div class="table-body">
+                            <div class="column"><span class="column-name">CODIGOILPI</span> <span class="pk">PK</span><div class="column-type">int - AUTO_INCREMENT</div></div>
+                            <div class="column"><span class="column-name">DATACADASTRO</span><div class="column-type">datetime</div></div>
+                            <div class="column"><span class="column-name">NOMEILPI</span><div class="column-type">varchar(255) NOT NULL</div></div>
+                            <div class="column"><span class="column-name">RESPONSAVELILPI</span><div class="column-type">varchar(255)</div></div>
+                            <div class="column"><span class="column-name">CAPACIDADEIDOSOS</span><div class="column-type">int</div></div>
+                            <div class="column"><span class="column-name">MUNICIPIO</span><div class="column-type">varchar(255)</div></div>
+                        </div>
+                    </div>
+
+                    <!-- TbVisitaInst -->
+                    <div class="table-card">
+                        <div class="table-header">TbVisitaInst</div>
+                        <div class="table-body">
+                            <div class="column"><span class="column-name">codigovisita</span> <span class="pk">PK</span><div class="column-type">int - AUTO_INCREMENT</div></div>
+                            <div class="column"><span class="column-name">nomeinstituicao</span><div class="column-type">varchar(255)</div></div>
+                            <div class="column"><span class="column-name">datavista</span><div class="column-type">datetime</div></div>
+                            <div class="column"><span class="column-name">assuntovisita</span><div class="column-type">varchar(255)</div></div>
+                            <div class="column"><span class="column-name">responsavelinstituicao</span><div class="column-type">varchar(255)</div></div>
+                            <div class="column"><span class="column-name">relatorio</span><div class="column-type">text</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Relationships Tab -->
+            <div id="relationships" class="tab-content">
+                <h2 style="margin-bottom: 20px; color: #667eea;">🔗 Relacionamentos Entre Tabelas</h2>
+
+                <div class="relationships">
+                    <h3>Relacionamentos Principais</h3>
+
+                    <div class="relationship-item">
+                        <strong>TbCIAPPICaso → tbciappiusuario</strong>
+                        <p>Um caso pode conter múltiplos usuários (idosos). Relacionamento 1:N</p>
+                    </div>
+
+                    <div class="relationship-item">
+                        <strong>TbCIAPPICaso → TbCIAPPIAcompanhamento</strong>
+                        <p>Um caso possui múltiplos acompanhamentos. Relacionamento 1:N</p>
+                    </div>
+
+                    <div class="relationship-item">
+                        <strong>TbCIAPPICaso → TbEvento</strong>
+                        <p>Um caso registra múltiplos eventos. Relacionamento 1:N</p>
+                    </div>
+
+                    <div class="relationship-item">
+                        <strong>TbCIAPPIAcompanhamento → TbOrgao</strong>
+                        <p>Acompanhamentos com encaminhamento referem um órgão. Relacionamento N:1</p>
+                    </div>
+
+                    <div class="relationship-item">
+                        <strong>TbEvento → TbTipoEvento</strong>
+                        <p>Cada evento é classificado por um tipo. Relacionamento N:1</p>
+                    </div>
+
+                    <div class="relationship-item">
+                        <strong>TbCIAPPIILPI → TbVisitaInst</strong>
+                        <p>Uma ILPI recebe múltiplas visitas. Relacionamento 1:N</p>
+                    </div>
+
+                    <div class="relationship-item">
+                        <strong>TbEstado → TbMunicipio</strong>
+                        <p>Um estado contém múltiplos municípios. Relacionamento 1:N</p>
+                    </div>
+                </div>
+
+                <div class="relationships" style="margin-top: 20px;">
+                    <h3>Integridade Referencial</h3>
+                    <p>O banco de dados implementa chaves estrangeiras para manter a integridade dos dados:</p>
+                    <ul style="margin-top: 10px; margin-left: 20px; line-height: 1.8;">
+                        <li><strong>Cascata de Atualizações:</strong> Mudanças em chaves primárias são propagadas automaticamente</li>
+                        <li><strong>Cascata de Exclusão:</strong> Exclusão de registros pai deleta automaticamente registros dependentes</li>
+                        <li><strong>Restrições NOT NULL:</strong> Campos obrigatórios garantem dados completos</li>
+                        <li><strong>Chaves Candidatas:</strong> Alguns campos têm restrição de unicidade para evitar duplicação</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>💾 Banco de Dados: CIAPPI | 🗄️ Motor: MySQL 8.0 | 📅 Atualizado: 2026</p>
+            <p>🔒 Charset: UTF-8MB4 | 🌍 Collation: utf8mb4_unicode_ci | 🕒 Timezone: America/Recife</p>
+        </footer>
+    </div>
+
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+        mermaid.contentLoaded();
+
+        function switchTab(tabName) {
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(button => button.classList.remove('active'));
+
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'diagram') {
+                setTimeout(() => {
+                    mermaid.contentLoaded();
+                }, 100);
+            }
+        }
+    </script>
+</body>
+</html>
+
