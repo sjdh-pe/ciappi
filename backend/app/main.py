@@ -39,6 +39,12 @@ from app.routers import (
     tabelas,
 )
 
+from fastapi.security import OAuth2PasswordBearer
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # IMPORTAÇÃO EXPLÍCITA DE MODELS
 # ─────────────────────────────────────────────────────────────────────────────
@@ -46,7 +52,7 @@ from app.routers import (
 # momento antes de criar/usar o banco. Aqui forçamos a importação do model
 # VisitaILPI (tabela TBAcompEntidade) que não é importado em nenhum outro lugar
 # automaticamente. O comentário "# noqa: F401" diz ao linter para ignorar o
-# aviso de "importado mas não usado" — o efeito colateral de registrar o model
+# aviso de "importado, mas não usado" — o efeito colateral de registrar o model
 # É o objetivo aqui.
 import app.models.visita_ilpi  # noqa: F401 — registra TBAcompEntidade no SQLAlchemy
 
@@ -70,7 +76,7 @@ app = FastAPI(
 # (ex: frontend em localhost:8501 chamando a API em localhost:8000).
 # O middleware de CORS configura quais origens têm permissão para acessar a API.
 #
-# allow_origins    → lista de origens permitidas (aqui, apenas o Streamlit dev)
+# Allow_origins    → lista de origens permitidas (aqui, apenas o Streamlit dev)
 # allow_credentials → permite enviar cookies/tokens junto com as requisições
 # allow_methods    → quais métodos HTTP são permitidos ("*" = todos: GET, POST, PUT...)
 # allow_headers    → quais cabeçalhos HTTP são aceitos

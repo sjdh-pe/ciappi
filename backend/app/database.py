@@ -7,10 +7,32 @@
 #   2. SessionLocal → fábrica de sessões (cada requisição abre e fecha uma)
 #   3. Base    → classe base que todos os Models vão herdar
 
+from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from app.core.config import settings  # lê DATABASE_URL do arquivo .env
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
+import logging
 
+logger = logging.getLogger("sqlalchemy.queries")
+logging.basicConfig(level=logging.DEBUG)
+
+
+@event.listens_for(Engine, "before_cursor_execute")
+def log_query(conn, cursor, statement, parameters, context, executemany):
+    # Substitui os placeholders pelos valores reais
+    if parameters:
+        for key, value in parameters.items():
+            if isinstance(value, str):
+                value = f"'{value}'"
+            elif isinstance(value, datetime):
+                value = f"'{value.strftime('%Y-%m-%d %H:%M:%S')}'"
+            statement = statement.replace(f"%({key})s", str(value))
+
+    print("=" * 60)
+    print("SQL:", statement)
+    print("=" * 60)
 # ─────────────────────────────────────────────────────────────────────────────
 # ENGINE — motor de conexão ao banco
 # ─────────────────────────────────────────────────────────────────────────────
@@ -51,9 +73,9 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # ─────────────────────────────────────────────────────────────────────────────
 # BASE — classe base para todos os Models
 # ─────────────────────────────────────────────────────────────────────────────
-# Todos os models do projeto (Caso, Usuario, Tecnico etc.) vão herdar desta
+# Todos os models do projeto (Caso, Usuário, Técnico, etc.) vão herdar desta
 # classe. Isso permite que o SQLAlchemy "saiba" quais tabelas existem e consiga
-# criar/atualizar o schema, fazer queries etc.
+# criar/atualizar o schema, fazer queries, etc.
 #
 # DeclarativeBase é a forma moderna (SQLAlchemy 2.0+) de definir a base.
 class Base(DeclarativeBase):

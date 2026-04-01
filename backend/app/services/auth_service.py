@@ -9,7 +9,7 @@
 #   Service → "o que fazer com os dados" (regras de negócio)
 #   Model   → "como os dados ficam no banco"
 #
-# Separar em services torna o código testável: você pode testar a lógica
+# separar em services torna o código testável: você pode testar a lógica
 # sem precisar subir um servidor web completo.
 
 from sqlalchemy.orm import Session
@@ -27,7 +27,7 @@ def autenticar(db: Session, nome: str, senha: str) -> dict | None:
       senha → senha em texto plano (legado do Access original)
 
     Retorna:
-      dict com access_token, nivel e nome → em caso de sucesso
+      dict com access_token, nível e nome → em caso de sucesso
       None → se nome/senha não conferem
 
     Lança:
@@ -52,7 +52,7 @@ def autenticar(db: Session, nome: str, senha: str) -> dict | None:
         return None
 
     # Verifica se o técnico está bloqueado
-    # .strip().lower() garante que "Bloqueado ", "BLOQUEADO" etc. também são detectados
+    # .strip().lower() garante que "Bloqueado ", "BLOQUEADO", etc. também são detectados
     if tecnico.TbStatus and tecnico.TbStatus.strip().lower() == "bloqueado":
         raise PermissionError("Usuário bloqueado. Procure a Coordenação.")
 

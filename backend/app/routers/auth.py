@@ -11,9 +11,10 @@
 # → Testabilidade: você pode testar um router isoladamente.
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm  # ← NOVO
 from sqlalchemy.orm import Session
 from app.dependencies import get_db
-from app.schemas.auth import LoginRequest, Token
+from app.schemas.auth import Token  # ← removido LoginRequest (não precisamos mais)
 from app.services.auth_service import autenticar
 
 # ── Criação do router ─────────────────────────────────────────────────────────
@@ -28,7 +29,10 @@ router = APIRouter(prefix="/auth", tags=["Autenticação"])
 # response_model=Token → define a estrutura da resposta (validada e serializada
 #                         automaticamente pelo Pydantic).
 @router.post("/login", response_model=Token)
-def login(payload: LoginRequest, db: Session = Depends(get_db)):
+def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),  # ← substituiu LoginRequest
+    db: Session = Depends(get_db)
+):
     """
     Autentica um técnico e retorna um token JWT.
 
@@ -43,18 +47,35 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
       4. Se credenciais erradas → 401 Unauthorized
       5. Se OK → retorna o Token (access_token + nível + nome)
     """
+
     try:
-        resultado = autenticar(db, payload.nome, payload.senha)
+        # form_data.username → nome do técnico
+        # form_data.password → senha
+        resultado = autenticar(db, form_data.username, form_data.password)
     except PermissionError as e:
-        # Técnico encontrado mas bloqueado → HTTP 403 (proibido, mas autenticado)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
 
     if not resultado:
-        # Credenciais incorretas → HTTP 401 (não autorizado)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Nome do Técnico e Senha não conferem",
         )
-
-    # FastAPI serializa automaticamente o dict retornado usando o schema Token
+        # FastAPI serializa automaticamente o dict retornado usando o schema Token
     return resultado
+
+    #
+    # try:
+    #     resultado = autenticar(db, payload.nome, payload.senha)
+    # except PermissionError as e:
+    #     # Técnico encontrado mas bloqueado → HTTP 403 (proibido, mas autenticado)
+    #     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    #
+    # if not resultado:
+    #     # Credenciais incorretas → HTTP 401 (não autorizado)
+    #     raise HTTPException(
+    #         status_code=status.HTTP_401_UNAUTHORIZED,
+    #         detail="Nome do Técnico e Senha não conferem",
+    #     )
+    #
+    #
+    # return resultado

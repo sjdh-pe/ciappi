@@ -28,6 +28,9 @@ def put(endpoint: str, data: dict):
 
 
 def login(nome: str, senha: str) -> dict:
-    r = requests.post(f"{API_BASE}/auth/login", json={"nome": nome, "senha": senha})
+    r = requests.post(
+        f"{API_BASE}/auth/login",
+        data={"username": nome, "password": senha}
+    )
     r.raise_for_status()
     return r.json()

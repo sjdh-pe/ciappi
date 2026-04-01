@@ -64,6 +64,20 @@ O frontend foi desenhado para ser produtivo e direto ao ponto.
 
 ---
 
+## 📊 Diagrama de Relacionamentos (E-R)
+
+Acesse o diagrama completo de entidades e relacionamentos do banco de dados:
+
+👉 **[Visualizar Diagrama E-R](./ciappi_db/diagrama_er.html)**
+
+O diagrama inclui:
+- ✅ Visualização das 19 tabelas principais
+- ✅ Relacionamentos entre entidades (1:N, N:1, etc.)
+- ✅ Campos, tipos de dados e chaves primárias/estrangeiras
+- ✅ Interface interativa com abas para diferentes visualizações
+
+---
+
 ## 🚀 Como Executar
 
 Para configurar o ambiente, instalar dependências e rodar o projeto em 5 minutos, acesse o nosso guia de início rápido:
