@@ -18,6 +18,7 @@ from datetime import date, datetime, timedelta
 from typing import Optional
 from app.dependencies import get_db, get_current_user, require_nivel
 from app.models.caso import Caso
+from app.schemas.caso import CasoOut
 
 router = APIRouter(prefix="/ouvidoria", tags=["Ouvidoria"])
 
@@ -50,7 +51,7 @@ def _base_aberta(db: Session):
 
 
 # ── GET /ouvidoria/avencer ────────────────────────────────────────────────────
-@router.get("/avencer")
+@router.get("/avencer", response_model=list[CasoOut])
 def casos_a_vencer(
     # dias é opcional: se informado, filtra casos que vencem nos próximos N dias
     dias: Optional[int] = Query(None, description="Prazo vence nos próximos N dias"),
@@ -77,7 +78,7 @@ def casos_a_vencer(
 
 
 # ── GET /ouvidoria/vencidas ───────────────────────────────────────────────────
-@router.get("/vencidas")
+@router.get("/vencidas", response_model=list[CasoOut])
 def casos_vencidos(db: Session = Depends(get_db), _=Depends(get_current_user)):
     """
     Casos com prazo de ouvidoria JÁ VENCIDO e ainda em aberto.
@@ -94,7 +95,7 @@ def casos_vencidos(db: Session = Depends(get_db), _=Depends(get_current_user)):
 
 
 # ── GET /ouvidoria/ambiente ───────────────────────────────────────────────────
-@router.get("/ambiente")
+@router.get("/ambiente", response_model=list[CasoOut])
 def casos_ouvidoria_sjdh(db: Session = Depends(get_db), _=Depends(get_current_user)):
     """
     Todos os casos ativos que chegaram via Ouvidoria da SJDH, após set/2019.
@@ -113,7 +114,7 @@ def casos_ouvidoria_sjdh(db: Session = Depends(get_db), _=Depends(get_current_us
 
 
 # ── GET /ouvidoria/concluidas ─────────────────────────────────────────────────
-@router.get("/concluidas")
+@router.get("/concluidas", response_model=list[CasoOut])
 def casos_concluidos(db: Session = Depends(get_db), _=Depends(get_current_user)):
     """
     Ouvidorias já encerradas, ordenadas da mais recente para a mais antiga.
@@ -128,7 +129,7 @@ def casos_concluidos(db: Session = Depends(get_db), _=Depends(get_current_user))
 
 
 # ── PUT /ouvidoria/{num_caso}/encerrar ────────────────────────────────────────
-@router.put("/{num_caso}/encerrar")
+@router.put("/{num_caso}/encerrar", response_model=CasoOut)
 def encerrar_ouvidoria(
     num_caso: int,
     # Query(...) → parâmetro obrigatório de URL: /ouvidoria/123/encerrar?num_oficio=OF-001

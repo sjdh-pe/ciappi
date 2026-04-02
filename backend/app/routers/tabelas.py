@@ -36,6 +36,18 @@ class TecnicoUpdate(BaseModel):
     TbStatus: Optional[str] = None
 
 
+class TecnicoOut(BaseModel):
+    """Schema de resposta para técnicos — exclui TbSenha por segurança."""
+    CodTecnico: int
+    TbNomeTecnico: str
+    TBCargoTecnico: Optional[str] = None
+    TbNivel: Optional[int] = None
+    TbStatus: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
 # ── Utilitário ────────────────────────────────────────────────
 
 def _get_or_404(db, model, pk_col, pk_val, label="Registro"):
@@ -312,12 +324,12 @@ def listar_municipios(db: Session = Depends(get_db), _=Depends(get_current_user)
 
 # ── Técnicos ──────────────────────────────────────────────────
 
-@router.get("/tecnicos")
+@router.get("/tecnicos", response_model=list[TecnicoOut])
 def listar_tecnicos(db: Session = Depends(get_db), _=Depends(require_nivel(2))):
     return db.query(Tecnico).filter(Tecnico.TbStatus != "Inativo").all()
 
 
-@router.post("/tecnicos", status_code=201)
+@router.post("/tecnicos", status_code=201, response_model=TecnicoOut)
 def criar_tecnico(data: TecnicoIn, db: Session = Depends(get_db), _=Depends(require_nivel(3))):
     obj = Tecnico(**data.model_dump())
     db.add(obj)
@@ -326,7 +338,7 @@ def criar_tecnico(data: TecnicoIn, db: Session = Depends(get_db), _=Depends(requ
     return obj
 
 
-@router.put("/tecnicos/{codigo}")
+@router.put("/tecnicos/{codigo}", response_model=TecnicoOut)
 def atualizar_tecnico(codigo: int, data: TecnicoUpdate, db: Session = Depends(get_db), _=Depends(require_nivel(3))):
     obj = _get_or_404(db, Tecnico, Tecnico.CodTecnico, codigo, "Técnico")
     for campo, valor in data.model_dump(exclude_unset=True).items():

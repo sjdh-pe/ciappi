@@ -39,7 +39,9 @@ class CasoBase(BaseModel):
     TbCasoChegouPrograma: Optional[str] = None
     Tbambienteviolencia: Optional[str] = None   # pode conter valores legados (ex: 'ILPI')
     TbCasoRelato: Optional[str] = None
-    TbCasoMunicipio: str
+    # Optional em Base para tolerar NULLs do banco legado.
+    # CasoCreate redeclara esses campos como str (obrigatórios) para novas entradas.
+    TbCasoMunicipio: Optional[str] = None
     TbCasoTecnicoResp: Optional[str] = None
 
 
@@ -54,6 +56,7 @@ class CasoCreate(CasoBase):
     TbCasoChegouPrograma: str
     Tbambienteviolencia: str        # validado abaixo
     TbCasoRelato: str
+    TbCasoMunicipio: str            # obrigatório na criação (Base permite NULL para leitura)
     TbCasoTecnicoResp: str
 
     @field_validator("tbnomeidoso", "TbCasoMunicipio", "TbCasoTecnicoResp")

@@ -27,6 +27,12 @@ def put(endpoint: str, data: dict):
     return r.json()
 
 
+def delete(endpoint: str):
+    r = requests.delete(f"{API_BASE}{endpoint}", headers=_headers())
+    r.raise_for_status()
+    return r.json() if r.content else {}
+
+
 def login(nome: str, senha: str) -> dict:
     r = requests.post(
         f"{API_BASE}/auth/login",

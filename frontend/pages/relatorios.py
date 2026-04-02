@@ -134,7 +134,8 @@ def show():
             try:
                 dados = get("/relatorios/municipio")
                 if dados:
-                    df = pd.DataFrame(dados, columns=["Município", "Total"])
+                    # API retorna [{"municipio": ..., "total": ...}] — renomear para exibição
+                    df = pd.DataFrame(dados).rename(columns={"municipio": "Município", "total": "Total"})
                     fig = px.bar(df, x="Município", y="Total", title="Casos por Município")
                     st.plotly_chart(fig, use_container_width=True)
                     st.dataframe(df, use_container_width=True)
@@ -149,24 +150,30 @@ def show():
         if st.button("🔍 Gerar", key="vio"):
             try:
                 # Por tipo (pizza)
+                # API retorna [{"tipo_violencia": ..., "total": ...}]
                 dados_tipo = get("/relatorios/violencia", {
                     "dt_ini": dt_ini.isoformat(), "dt_fim": dt_fim.isoformat()
                 })
                 if dados_tipo:
-                    df_t = pd.DataFrame(dados_tipo, columns=["Tipo", "Total"])
+                    df_t = pd.DataFrame(dados_tipo).rename(
+                        columns={"tipo_violencia": "Tipo", "total": "Total"}
+                    )
                     fig = px.pie(df_t, names="Tipo", values="Total", title="Tipos de Violência")
                     st.plotly_chart(fig, use_container_width=True)
                     _csv_link("/relatorios/csv/violencia", "violencia",
                               {"dt_ini": dt_ini.isoformat(), "dt_fim": dt_fim.isoformat()})
 
                 # Por bairro (se filtrou município)
+                # API retorna [{"bairro": ..., "municipio": ..., "total": ...}]
                 params_bairro = {"dt_ini": dt_ini.isoformat(), "dt_fim": dt_fim.isoformat()}
                 if col_mun:
                     params_bairro["municipio"] = col_mun
                 dados_bairro = get("/relatorios/violencia-bairro", params_bairro)
                 if dados_bairro:
                     st.subheader("Violência por Bairro")
-                    df_b = pd.DataFrame(dados_bairro, columns=["Bairro", "Município", "Total"])
+                    df_b = pd.DataFrame(dados_bairro).rename(
+                        columns={"bairro": "Bairro", "municipio": "Município", "total": "Total"}
+                    )
                     fig2 = px.bar(df_b, x="Bairro", y="Total",
                                   title="Casos por Bairro de Residência")
                     st.plotly_chart(fig2, use_container_width=True)
@@ -177,9 +184,10 @@ def show():
     with aba[6]:
         if st.button("🔍 Gerar", key="ori"):
             try:
+                # API retorna [{"origem": ..., "total": ...}]
                 dados = get("/relatorios/origem")
                 if dados:
-                    df = pd.DataFrame(dados, columns=["Origem", "Total"])
+                    df = pd.DataFrame(dados).rename(columns={"origem": "Origem", "total": "Total"})
                     fig = px.bar(df, x="Origem", y="Total", title="Como Chegou ao Programa")
                     st.plotly_chart(fig, use_container_width=True)
             except Exception as e:
@@ -278,15 +286,18 @@ def show():
             try:
                 col1, col2 = st.columns(2)
 
+                # Todos os endpoints de perfil retornam [{"<campo>": ..., "total": ...}]
+                # — precisam de rename pois pd.DataFrame(data, columns=[...]) seleciona
+                #   por nome de chave, não renomeia
                 esc = get("/relatorios/perfil/escolaridade")
                 if esc:
-                    df_e = pd.DataFrame(esc, columns=["Escolaridade", "Total"])
+                    df_e = pd.DataFrame(esc).rename(columns={"escolaridade": "Escolaridade", "total": "Total"})
                     fig = px.bar(df_e, x="Escolaridade", y="Total", title="Escolaridade")
                     col1.plotly_chart(fig, use_container_width=True)
 
                 fet = get("/relatorios/perfil/faixa-etaria")
                 if fet:
-                    df_f = pd.DataFrame(fet, columns=["Faixa Etária", "Total"])
+                    df_f = pd.DataFrame(fet).rename(columns={"faixa_etaria": "Faixa Etária", "total": "Total"})
                     fig2 = px.pie(df_f, names="Faixa Etária", values="Total", title="Faixa Etária")
                     col2.plotly_chart(fig2, use_container_width=True)
 
@@ -294,19 +305,19 @@ def show():
 
                 sexo = get("/relatorios/perfil/sexo")
                 if sexo:
-                    df_s = pd.DataFrame(sexo, columns=["Sexo", "Total"])
+                    df_s = pd.DataFrame(sexo).rename(columns={"sexo": "Sexo", "total": "Total"})
                     fig3 = px.pie(df_s, names="Sexo", values="Total", title="Sexo")
                     col3.plotly_chart(fig3, use_container_width=True)
 
                 renda = get("/relatorios/perfil/renda")
                 if renda:
-                    df_r = pd.DataFrame(renda, columns=["Faixa de Renda", "Total"])
+                    df_r = pd.DataFrame(renda).rename(columns={"faixa_renda": "Faixa de Renda", "total": "Total"})
                     fig4 = px.bar(df_r, x="Faixa de Renda", y="Total", title="Faixa de Renda")
                     col4.plotly_chart(fig4, use_container_width=True)
 
                 raca = get("/relatorios/perfil/raca-cor")
                 if raca:
-                    df_rc = pd.DataFrame(raca, columns=["Raça/Cor", "Total"])
+                    df_rc = pd.DataFrame(raca).rename(columns={"raca_cor": "Raça/Cor", "total": "Total"})
                     fig5 = px.bar(df_rc, x="Raça/Cor", y="Total", title="Raça/Cor")
                     st.plotly_chart(fig5, use_container_width=True)
 
@@ -331,9 +342,10 @@ def show():
                                   "Município", "Público"][:len(df.columns)]
                     st.dataframe(df, use_container_width=True)
 
+                # API retorna [{"municipio": ..., "total": ...}]
                 mun = get("/relatorios/eventos-por-municipio")
                 if mun:
-                    df_m = pd.DataFrame(mun, columns=["Município", "Total"])
+                    df_m = pd.DataFrame(mun).rename(columns={"municipio": "Município", "total": "Total"})
                     fig = px.bar(df_m, x="Município", y="Total", title="Eventos por Município")
                     st.plotly_chart(fig, use_container_width=True)
             except Exception as e:

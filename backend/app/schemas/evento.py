@@ -16,8 +16,11 @@ class EventoBase(BaseModel):
     """
     Campos comuns lidos/escritos. Sem validators de negócio aqui.
     Todos os campos de data usam ZeroDatetime para tolerar datas zeradas legadas.
+
+    tbtipoevento é Optional aqui para tolerar NULLs do legado.
+    EventoCreate redeclara como str obrigatório.
     """
-    tbtipoevento: str
+    tbtipoevento: Optional[str] = None
     tbnomeevento: Optional[str] = None
     Tbobjetivoevento: Optional[str] = None
     Tbdataprevista: ZeroDatetime = None         # data prevista (pode ser zerada no legado)
@@ -32,7 +35,10 @@ class EventoCreate(EventoBase):
     """
     Schema de criação — aqui ficam os validators de regra de negócio.
     Só rodam na ENTRADA (POST /eventos), não na leitura.
+    tbtipoevento redeclarado como obrigatório (override do Optional da Base).
     """
+    tbtipoevento: str
+
     @field_validator("Tbdataprevista")
     @classmethod
     def data_prevista_nao_no_passado(cls, v):

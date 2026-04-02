@@ -10,7 +10,8 @@ def show():
         ativos = get("/relatorios/casos-ativos")
         ouvidoria = get("/ouvidoria/avencer")
         col1, col2, col3 = st.columns(3)
-        col1.metric("Casos Ativos", len(ativos))
+        # casos-ativos retorna {"total": N, "casos": [...]} — len() do dict daria 2
+        col1.metric("Casos Ativos", ativos.get("total", 0))
         col2.metric("Ouvidoria a Vencer", len(ouvidoria))
         col3.metric("Sistema", "Online", delta="✓")
     except Exception:

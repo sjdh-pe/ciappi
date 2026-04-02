@@ -3,6 +3,10 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # Validator de "data não pode ser no passado" fica somente em VisitaILPICreate,
 # não em VisitaILPIBase — para não bloquear visitas antigas na resposta.
+#
+# Campos obrigatórios também ficam somente no Create: Base tem tudo Optional
+# para tolerar NULLs do banco legado (Access). O field_validator to_upper foi
+# movido do Base para o Create pelo mesmo motivo.
 
 from pydantic import BaseModel, field_validator
 from datetime import datetime, date
@@ -11,22 +15,32 @@ from app.schemas.common import ZeroDatetime
 
 
 class VisitaILPIBase(BaseModel):
-    """Campos do agendamento. Sem validators de negócio temporais."""
-    codigoilpi: int
-    nomeentidade: str
-    tecnicoresponsavel: str
+    """
+    Campos comuns entre criação e resposta.
+    Todos Optional para tolerar NULLs do legado. Validator to_upper movido para Create.
+    """
+    codigoilpi: Optional[int] = None
+    nomeentidade: Optional[str] = None
+    tecnicoresponsavel: Optional[str] = None
     dtprevistavisita: ZeroDatetime = None
     motivovisita: Optional[str] = None
     observacoes: Optional[str] = None
 
+
+class VisitaILPICreate(VisitaILPIBase):
+    """
+    Schema de agendamento — campos obrigatórios redeclarados como não-opcionais,
+    validator to_upper e validação de data prevista não-passada.
+    """
+    codigoilpi: int
+    nomeentidade: str
+    tecnicoresponsavel: str
+
     @field_validator("nomeentidade", "tecnicoresponsavel")
     @classmethod
     def to_upper(cls, v):
+        """Padroniza em maiúsculas. Só roda na criação."""
         return v.upper() if v else v
-
-
-class VisitaILPICreate(VisitaILPIBase):
-    """Schema de agendamento — valida que data prevista não é no passado."""
 
     @field_validator("dtprevistavisita")
     @classmethod

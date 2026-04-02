@@ -11,11 +11,12 @@ from app.schemas.common import ZeroDatetime
 
 
 class UsuarioBase(BaseModel):
-    # Obrigatórios
-    tbcaso: int
-    tbnome: str
-    tbsexo: str
-    tbtecnicoresponsavel: str
+    # Optional em Base para tolerar NULLs do banco legado (Access).
+    # UsuarioCreate redeclara esses campos como obrigatórios para novas entradas.
+    tbcaso: Optional[int] = None
+    tbnome: Optional[str] = None
+    tbsexo: Optional[str] = None
+    tbtecnicoresponsavel: Optional[str] = None
 
     # Datas — ZeroDatetime converte "0000-00-00 00:00:00" para None automaticamente
     tbdtcadastro: ZeroDatetime = None
@@ -109,7 +110,14 @@ class UsuarioBase(BaseModel):
 
 
 class UsuarioCreate(UsuarioBase):
-    """Schema de criação — validators de negócio ficam aqui."""
+    """
+    Schema de criação — campos obrigatórios redeclarados e validators de negócio.
+    Redeclara tbcaso, tbnome, tbsexo, tbtecnicoresponsavel como não-opcionais.
+    """
+    tbcaso: int
+    tbnome: str
+    tbsexo: str
+    tbtecnicoresponsavel: str
 
     @field_validator("tbnome")
     @classmethod

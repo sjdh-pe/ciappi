@@ -7,8 +7,12 @@ from app.schemas.common import ZeroDatetime
 
 
 class VisitaInstBase(BaseModel):
-    """Campos comuns. ZeroDatetime trata '0000-00-00 00:00:00' automaticamente."""
-    nomeinstituicao: str
+    """
+    Campos comuns. ZeroDatetime trata '0000-00-00 00:00:00' automaticamente.
+    nomeinstituicao Optional aqui para tolerar NULLs do legado.
+    VisitaInstCreate redeclara como str obrigatório.
+    """
+    nomeinstituicao: Optional[str] = None
     assuntovisita: Optional[str] = None
     responsavelinstituicao: Optional[str] = None
     datavista: ZeroDatetime = None
@@ -18,7 +22,8 @@ class VisitaInstBase(BaseModel):
 
 
 class VisitaInstCreate(VisitaInstBase):
-    pass
+    """Redeclara nomeinstituicao como obrigatório na criação."""
+    nomeinstituicao: str
 
 
 class VisitaInstUpdate(BaseModel):
