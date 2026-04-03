@@ -108,7 +108,7 @@ def casos_ouvidoria_sjdh(db: Session = Depends(get_db), _=Depends(get_current_us
         .filter(Caso.TbCasoChegouPrograma == ORIGEM_OUVIDORIA)
         .filter(Caso.TbCasoDtinicio > corte)
         .filter(Caso.TbCasoDtencer.is_(None))  # só casos ainda abertos
-        .order_by(Caso.TbCasoDtinicio)
+        .order_by(Caso.TbCasoDtinicio.desc())
         .all()
     )
 

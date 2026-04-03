@@ -37,7 +37,7 @@ def listar(
         # Se buscou por nome, usa o service de busca (retorna todos os que combinam)
         return buscar_por_nome(db, nome)
     # Sem filtro → paginação padrão
-    return db.query(Usuario).offset(skip).limit(limit).all()
+    return db.query(Usuario).order_by(Usuario.tbnumerocadastro.desc()).offset(skip).limit(limit).all()
 
 
 # ── GET /usuarios/{num_cadastro} ──────────────────────────────────────────────

@@ -601,7 +601,7 @@ def encaminhamentos(
             "TbAcompOrgao": r.TbAcompOrgao,
             "TbAcompAcao": r.TbAcompAcao,
         }
-        for r in q.order_by(Acompanhamento.TbAcompdata).all()
+        for r in q.order_by(Acompanhamento.TbAcompdata.desc()).all()
     ]
 
 
@@ -778,7 +778,7 @@ def visitas_ilpi(
         q = q.filter(VisitaILPI.dtvisita >= dt_ini)
     if dt_fim:
         q = q.filter(VisitaILPI.dtvisita <= dt_fim)
-    return [_visita_ilpi_dict(v) for v in q.order_by(VisitaILPI.dtvisita).all()]
+    return [_visita_ilpi_dict(v) for v in q.order_by(VisitaILPI.dtvisita.desc()).all()]
 
 
 @router.get("/visitas-inst")
@@ -794,7 +794,7 @@ def visitas_inst(
         q = q.filter(VisitaInst.datavista >= dt_ini)
     if dt_fim:
         q = q.filter(VisitaInst.datavista <= dt_fim)
-    return [_visita_inst_dict(v) for v in q.order_by(VisitaInst.datavista).all()]
+    return [_visita_inst_dict(v) for v in q.order_by(VisitaInst.datavista.desc()).all()]
 
 
 # ─────────────────────────────────────────────────────────────────────────────

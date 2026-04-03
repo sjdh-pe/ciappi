@@ -150,6 +150,7 @@ def listar_casos(
     municipio: str = None,
     encerrado: str = None,
     tecnico: str = None,
+    motivo: str = None,   # filtro por tipo de violência (TbCasoMotivoAtendimento)
     skip: int = 0,
     limit: int = 100,
 ):
@@ -169,5 +170,7 @@ def listar_casos(
         q = q.filter(Caso.TbCasoEncerrado == encerrado)
     if tecnico:
         q = q.filter(Caso.TbCasoTecnicoResp.ilike(f"%{tecnico}%"))
+    if motivo:
+        q = q.filter(Caso.TbCasoMotivoAtendimento == motivo)
 
-    return q.offset(skip).limit(limit).all()
+    return q.order_by(Caso.TbCasoDtinicio.desc()).offset(skip).limit(limit).all()

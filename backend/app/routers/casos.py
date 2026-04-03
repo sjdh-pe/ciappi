@@ -27,12 +27,13 @@ def listar(
     municipio: Optional[str] = Query(None),
     encerrado: Optional[str] = Query(None),
     tecnico: Optional[str] = Query(None),
+    motivo: Optional[str] = Query(None, description="Filtra por tipo de violência (TbCasoMotivoAtendimento)"),
     skip: int = 0,      # paginação: quantos registros pular
     limit: int = 100,   # paginação: máximo de registros por página
     db: Session = Depends(get_db),
     _=Depends(get_current_user),  # _ significa "não uso o retorno, só valido o token"
 ):
-    return listar_casos(db, municipio, encerrado, tecnico, skip, limit)
+    return listar_casos(db, municipio, encerrado, tecnico, motivo, skip, limit)
 
 
 # ── GET /casos/{num_caso} ─────────────────────────────────────────────────────

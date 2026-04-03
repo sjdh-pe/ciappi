@@ -35,7 +35,15 @@ def _csv_link(endpoint: str, label: str, params: dict = None):
 
 
 def show():
-    st.title("📊 Relatórios")
+    st.markdown("""
+        <div style="padding:4px 0 16px">
+            <h2 style="margin:0;color:#1a3a5c">📊 Relatórios</h2>
+            <div style="font-size:13px;color:#6b7c93;margin-top:4px">
+                Indicadores e análises do programa
+            </div>
+        </div>
+        <hr style="border:none;border-top:2px solid #e0e9f4;margin-bottom:20px">
+    """, unsafe_allow_html=True)
 
     aba = st.tabs([
         "Casos Ativos", "Casos Parados", "Encerrados",

@@ -23,7 +23,7 @@ def listar(db: Session = Depends(get_db), _=Depends(get_current_user)):
     Retorna todos os eventos sem paginação.
     Eventos tendem a ser poucos — sem necessidade de skip/limit aqui.
     """
-    return db.query(Evento).all()
+    return db.query(Evento).order_by(Evento.Tbdataprevista.desc()).all()
 
 
 # ── GET /eventos/{codigo} ─────────────────────────────────────────────────────

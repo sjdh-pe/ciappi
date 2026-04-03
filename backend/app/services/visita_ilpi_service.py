@@ -110,5 +110,5 @@ def listar_visitas(
     if apenas_realizadas:
         q = q.filter(VisitaILPI.dtvisita.isnot(None))  # visitas concluídas
 
-    # Ordena pela data prevista para facilitar a visualização de próximas visitas
-    return q.order_by(VisitaILPI.dtprevistavisita).all()
+    # Ordena da mais recente para a mais antiga
+    return q.order_by(VisitaILPI.dtprevistavisita.desc()).all()

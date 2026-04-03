@@ -38,7 +38,7 @@ router = APIRouter(prefix="/visitas", tags=["Visitas"])
 @router.get("/inst", response_model=list[VisitaInstOut])
 def listar_inst(db: Session = Depends(get_db), _=Depends(get_current_user)):
     """Lista todas as visitas institucionais."""
-    return db.query(VisitaInst).all()
+    return db.query(VisitaInst).order_by(VisitaInst.datavista.desc()).all()
 
 
 @router.get("/inst/{codigo}", response_model=VisitaInstOut)

@@ -9,8 +9,15 @@ def show():
         st.error("Acesso restrito. Somente gestores podem acessar esta área.")
         return
 
-    st.title("⚙️ Tabelas Auxiliares (Admin)")
-    st.caption("Tabelas de apoio ao sistema — equivalente ao menu protegido por senha no Access.")
+    st.markdown("""
+        <div style="padding:4px 0 16px">
+            <h2 style="margin:0;color:#1a3a5c">⚙️ Tabelas Auxiliares</h2>
+            <div style="font-size:13px;color:#6b7c93;margin-top:4px">
+                Tabelas de apoio ao sistema — equivalente ao menu protegido no Access
+            </div>
+        </div>
+        <hr style="border:none;border-top:2px solid #e0e9f4;margin-bottom:20px">
+    """, unsafe_allow_html=True)
 
     tabela = st.selectbox("Selecione a tabela", [
         "Motivos de Atendimento",

@@ -19,7 +19,7 @@ router = APIRouter(prefix="/ilpis", tags=["ILPIs"])
 # ── GET /ilpis ────────────────────────────────────────────────────────────────
 @router.get("/", response_model=list[ILPIOut])
 def listar(db: Session = Depends(get_db), _=Depends(get_current_user)):
-    return db.query(ILPI).all()
+    return db.query(ILPI).order_by(ILPI.CODIGOILPI.desc()).all()
 
 
 # ── GET /ilpis/{codigo} ───────────────────────────────────────────────────────
