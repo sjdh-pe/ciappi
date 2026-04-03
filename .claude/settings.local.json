@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(docker ps:*)",
-      "Bash(find /Users/raulfranca/Desktop/MySQL/MySQL-ciappi -type f ! -path */node_modules/* ! -path */.git/* ! -path */.DS_Store ! -path */.* ! -name .env* ! -name docker-compose.yml ! -name *.csv ! -name *.accdb ! -name *.laccdb)"
+      "Bash(find /Users/raulfranca/Desktop/MySQL/MySQL-ciappi -type f ! -path */node_modules/* ! -path */.git/* ! -path */.DS_Store ! -path */.* ! -name .env* ! -name docker-compose.yml ! -name *.csv ! -name *.accdb ! -name *.laccdb)",
+      "Bash(ls -la /Users/raulfranca/projetos/ciappi/backend/app/models/*.py)",
+      "Bash(make -n up)",
+      "Bash(make -n down)",
+      "Bash(make -n migrate)",
+      "Bash(make -n help)",
+      "Bash(make -n setup)",
+      "Bash(make -n test)",
+      "Bash(make -n restore FILE=backup.sql)"
     ]
   }
 }

@@ -168,8 +168,16 @@ class UsuarioUpdate(BaseModel):
 
 
 class UsuarioOut(UsuarioBase):
-    """Schema de resposta — inclui o ID gerado pelo banco."""
+    """
+    Schema de resposta — inclui o ID gerado pelo banco.
+    Redeclara campos de data com ZeroDatetime para garantir que datas zeradas
+    do legado (0000-00-00 00:00:00) sejam convertidas para None na serialização.
+    """
     tbnumerocadastro: int
+    # Redeclaração de campos de data com ZeroDatetime — CRUCIAL para resposta
+    tbdtcadastro: ZeroDatetime = None
+    tbdtnascimento: ZeroDatetime = None
+    tbdtexpedicao: ZeroDatetime = None
 
     class Config:
         from_attributes = True
