@@ -19,7 +19,8 @@ from typing import Optional
 from app.schemas.common import ZeroDatetime   # trata "0000-00-00 00:00:00" → None
 
 # Valores válidos para o campo de ambiente de violência
-AMBIENTES_VALIDOS = {"Intrafamiliar", "Extrafamiliar"}
+# "ILPI" era usado no Access e está presente em ~660 registros legados
+AMBIENTES_VALIDOS = {"Intrafamiliar", "Extrafamiliar", "ILPI"}
 
 
 class CasoBase(BaseModel):

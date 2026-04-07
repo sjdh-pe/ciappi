@@ -104,7 +104,8 @@ def test_restaurar_caso_encerrado(client):
     r = client.put("/casos/1001/restaurar", json={"motivo_restauracao": 2})
     assert r.status_code == 200
     data = r.json()
-    assert data["TbCasoEncerrado"] == "Não"
+    # Legado nunca preencheu TbCasoEncerrado; restaurar limpa para NULL
+    assert data["TbCasoEncerrado"] is None
     assert data["TbCasoDtencer"] is None
     assert data["TbCasoMotivoEncerramento"] is None
 

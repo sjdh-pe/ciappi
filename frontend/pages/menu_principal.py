@@ -107,16 +107,16 @@ def show():
                 df_v = df_v[[c for c in cols_v if c in df_v.columns]]
                 df_v.columns = ["Nº", "Idoso", "Prazo"][:len(df_v.columns)]
                 if "Prazo" in df_v.columns:
-                    df_v["Prazo"] = df_v["Prazo"].str[:10]
+                    df_v["Prazo"] = pd.to_datetime(df_v["Prazo"], errors="coerce").dt.strftime("%d/%m/%Y")
                 st.dataframe(
                     df_v,
                     use_container_width=True,
                     height=260,
                     hide_index=True,
                     column_config={
-                        "Nº": st.column_config.NumberColumn("Nº", format="%d", width="small"),
+                        "Nº": st.column_config.NumberColumn("Nº", width="small"),
                         "Idoso": st.column_config.TextColumn("Idoso"),
-                        "Prazo": st.column_config.TextColumn("Prazo Vencido"),
+                        "Prazo": st.column_config.DateColumn("Prazo Vencido", format="DD/MM/YYYY"),
                     }
                 )
             else:
@@ -136,7 +136,7 @@ def show():
     try:
         casos_lista = ativos.get("casos", [])
         if casos_lista:
-            df_rec = pd.DataFrame(casos_lista[:10])
+            df_rec = pd.DataFrame(casos_lista)
             cols_r = ["TbCasoNumCaso", "tbnomeidoso", "TbCasoMunicipio",
                       "TbCasoTecnicoResp", "ultima_data_acomp", "ultima_acao"]
             df_rec = df_rec[[c for c in cols_r if c in df_rec.columns]]
@@ -151,7 +151,7 @@ def show():
                     "Idoso": st.column_config.TextColumn("Idoso", width="medium"),
                     "Município": st.column_config.TextColumn("Município"),
                     "Técnico": st.column_config.TextColumn("Técnico"),
-                    "Último Acomp.": st.column_config.TextColumn("Último Acomp."),
+                    "Último Acomp.": st.column_config.DatetimeColumn("Último Acomp.", format="DD/MM/YYYY"),
                     "Última Ação": st.column_config.TextColumn("Última Ação"),
                 }
             )

@@ -71,7 +71,9 @@ def atualizar_acompanhamento(
     updates = data.model_dump(exclude_unset=True)
 
     # ── Valida Encaminhamento ─────────────────────────────────────────────────
-    if "TbAcompAcao" in updates and updates["TbAcompAcao"] == "Encaminhamento":
+    # Checagem parcial: cobre "Encaminhamento", "Encaminhamento para outro órgão", etc.
+    nova_acao = updates.get("TbAcompAcao", "")
+    if nova_acao and "encaminhamento" in nova_acao.lower():
         # Usa o órgão do update OU o que já está no banco
         orgao = updates.get("TbAcompOrgao") or acomp.TbAcompOrgao
         if not orgao:

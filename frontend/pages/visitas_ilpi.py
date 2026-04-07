@@ -97,7 +97,7 @@ def show():
                 nome_ilpi_sel = None
 
             col1, col2 = st.columns(2)
-            dt_prevista = col1.date_input("Data Prevista *")
+            dt_prevista = col1.date_input("Data Prevista *", format="DD/MM/YYYY")
             opts_mot = _motivos_visita()
             motivo = col2.selectbox("Motivo da Visita *", opts_mot)
 
@@ -147,7 +147,7 @@ def show():
 
             with st.form("form_realizar_ilpi"):
                 card_section("Dados da Realização")
-                dt_real = st.date_input("Data de Realização *")
+                dt_real = st.date_input("Data de Realização *", format="DD/MM/YYYY")
                 relato  = st.text_area("Relatório da Visita *", height=140,
                                        placeholder="Descreva o que foi observado durante a visita...")
                 obs_r   = st.text_area("Observações adicionais", height=70)

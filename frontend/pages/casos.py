@@ -10,6 +10,16 @@ from components.listas import (
 )
 
 
+def _header(titulo: str, subtitulo: str):
+    st.markdown(f"""
+        <div style="padding:4px 0 16px">
+            <h2 style="margin:0;color:#1a3a5c">{titulo}</h2>
+            <div style="font-size:13px;color:#6b7c93;margin-top:4px">{subtitulo}</div>
+        </div>
+        <hr style="border:none;border-top:2px solid #e0e9f4;margin-bottom:20px">
+    """, unsafe_allow_html=True)
+
+
 def _badge_status(enc: bool) -> str:
     if enc:
         return '<span style="background:#f8d7da;color:#721c24;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600">🔴 Encerrado</span>'
@@ -31,7 +41,8 @@ def show():
             tecnico   = col2.text_input("Técnico", placeholder="Nome do técnico")
 
             col3, col4 = st.columns(2)
-            opts_vio  = ["(Todos)"] + _motivos_lista()
+            opts_vio_map = _motivos_lista()   # {descricao: codigo}
+            opts_vio  = ["(Todos)"] + list(opts_vio_map.keys())
             vio_sel   = col3.selectbox("Tipo de Violência", opts_vio, key="busca_vio")
             encerrado = col4.selectbox("Status", ["Todos", "Ativos", "Encerrados"])
             buscar = st.button("🔍 Buscar Casos", use_container_width=True, type="primary")
@@ -40,7 +51,7 @@ def show():
             params = {}
             if municipio: params["municipio"] = municipio
             if tecnico:   params["tecnico"]   = tecnico
-            if vio_sel != "(Todos)": params["motivo"] = vio_sel
+            if vio_sel != "(Todos)": params["motivo"] = opts_vio_map[vio_sel]
             if encerrado == "Ativos":       params["encerrado"] = "Não"
             elif encerrado == "Encerrados": params["encerrado"] = "Sim"
 
@@ -49,12 +60,23 @@ def show():
                     casos = get("/casos/", params)
                     if casos:
                         df = pd.DataFrame(casos)
-                        cols = ["TbCasoNumCaso", "tbnomeidoso", "TbCasoMunicipio",
-                                "TbCasoDtinicio", "TbCasoEncerrado",
-                                "TbCasoTecnicoResp", "TbCasoMotivoAtendimento"]
-                        df = df[[c for c in cols if c in df.columns]].copy()
-                        df.columns = ["Nº", "Idoso", "Município", "Dt. Início",
-                                      "Encerrado", "Técnico", "Tipo de Violência"][:len(df.columns)]
+                        # Deriva status a partir de TbCasoDtencer (TbCasoEncerrado é NULL no legado)
+                        if "TbCasoDtencer" in df.columns:
+                            df["TbCasoEncerrado"] = df["TbCasoDtencer"].apply(
+                                lambda x: "Encerrado" if pd.notna(x) and x else "Ativo"
+                            )
+
+                        col_map = {
+                            "TbCasoNumCaso":            "Nº",
+                            "tbnomeidoso":              "Idoso",
+                            "TbCasoMunicipio":          "Município",
+                            "TbCasoDtinicio":           "Dt. Início",
+                            "TbCasoEncerrado":          "Status",
+                            "TbCasoTecnicoResp":        "Técnico",
+                            "TbCasoMotivoAtendimento":  "Tipo de Violência",
+                        }
+                        cols_disponiveis = [c for c in col_map if c in df.columns]
+                        df = df[cols_disponiveis].rename(columns=col_map)
 
                         # Formata datas
                         for col_data in ["Dt. Início"]:
@@ -65,12 +87,12 @@ def show():
                         st.dataframe(
                             df, use_container_width=True, hide_index=True,
                             column_config={
-                                "Nº": st.column_config.NumberColumn("Nº", format="%d", width="small"),
+                                "Nº": st.column_config.NumberColumn("Nº", width="small"),
                                 "Idoso": st.column_config.TextColumn("Idoso", width="large"),
                                 "Município": st.column_config.TextColumn("Município"),
                                 "Dt. Início": st.column_config.DatetimeColumn(
                                     "Dt. Início", format="DD/MM/YYYY"),
-                                "Encerrado": st.column_config.TextColumn("Status", width="small"),
+                                "Status": st.column_config.TextColumn("Status", width="small"),
                                 "Técnico": st.column_config.TextColumn("Técnico"),
                                 "Tipo de Violência": st.column_config.TextColumn("Tipo de Violência"),
                             }
@@ -86,7 +108,7 @@ def show():
             card_section("Identificação")
             col1, col2 = st.columns(2)
             num_caso   = col1.number_input("Nº do Caso *", min_value=1, step=1)
-            dt_inicio  = col2.date_input("Data de Início *")
+            dt_inicio  = col2.date_input("Data de Início *", format="DD/MM/YYYY")
             nome_idoso = st.text_input("Nome do Idoso *", placeholder="Nome completo")
 
             card_section("Localização e Responsável")
@@ -99,11 +121,11 @@ def show():
 
             card_section("Classificação")
             col5, col6 = st.columns(2)
-            opts_motivo = _motivos_lista()
-            motivo  = col5.selectbox("Tipo de Violência *", [""] + opts_motivo, key="novo_caso_vio")
+            opts_motivo_map = _motivos_lista()   # {descricao: codigo}
+            motivo_desc = col5.selectbox("Tipo de Violência *", [""] + list(opts_motivo_map.keys()), key="novo_caso_vio")
             opts_origem = _origens_lista()
             origem  = col6.selectbox("Como Chegou ao Programa *", opts_origem)
-            ambiente = st.selectbox("Ambiente de Violência *", ["Intrafamiliar", "Extrafamiliar"])
+            ambiente = st.selectbox("Ambiente de Violência *", ["Intrafamiliar", "Extrafamiliar", "ILPI"])
 
             card_section("Relato")
             relato = st.text_area("Síntese do Caso *", height=130,
@@ -112,6 +134,7 @@ def show():
             salvar = st.button("💾 Salvar Caso", use_container_width=True, type="primary")
 
         if salvar:
+            motivo = opts_motivo_map.get(motivo_desc, "")
             if not all([nome_idoso, municipio_novo, motivo, origem, relato]):
                 st.error("⚠️ Todos os campos obrigatórios (*) devem ser preenchidos.")
             else:
@@ -152,7 +175,7 @@ def show():
 
         if "caso_edicao" in st.session_state:
             c   = st.session_state["caso_edicao"]
-            enc = c.get("TbCasoEncerrado") == "Sim"
+            enc = bool(c.get("TbCasoDtencer"))   # legado: TbCasoEncerrado sempre NULL
 
             st.markdown(
                 f"""<div style="background:#f8fbff;border:1px solid #cfe2ff;border-radius:10px;
@@ -176,7 +199,7 @@ def show():
 
                 with col_enc:
                     card_section("🔒 Encerramento")
-                    dt_encer = st.date_input("Data de Encerramento", value=None, key="dt_enc_form")
+                    dt_encer = st.date_input("Data de Encerramento", value=None, key="dt_enc_form", format="DD/MM/YYYY")
                     try:
                         mot_enc = get("/tabelas/motivos-encerramento")
                         opts_enc = {"(manter aberto)": None,
@@ -187,7 +210,7 @@ def show():
 
                 with col_ouv:
                     card_section("📣 Ouvidoria")
-                    prazo_ouv    = st.date_input("Prazo Ouvidoria", value=None, key="prazo_ouv_form")
+                    prazo_ouv    = st.date_input("Prazo Ouvidoria", value=None, key="prazo_ouv_form", format="DD/MM/YYYY")
                     num_denuncia = st.number_input("Nº da Denúncia", min_value=0, step=1,
                                                    value=int(c.get("TbNumDenuncia") or 0))
 
@@ -224,7 +247,7 @@ def show():
                 with st.spinner("Verificando..."):
                     try:
                         caso = get(f"/casos/{num_rest}")
-                        if caso.get("TbCasoEncerrado") == "Sim":
+                        if bool(caso.get("TbCasoDtencer")):   # legado: TbCasoEncerrado sempre NULL
                             st.session_state["caso_restaurar"] = caso
                         else:
                             st.info("ℹ️ Este caso não está encerrado.")

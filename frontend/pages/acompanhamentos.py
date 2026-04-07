@@ -40,7 +40,8 @@ def show():
                     # Dados do caso
                     try:
                         caso = get(f"/casos/{num_caso}")
-                        enc = caso.get("TbCasoEncerrado") == "Sim"
+                        # TbCasoEncerrado é NULL no legado — usa TbCasoDtencer como fonte de verdade
+                        enc = bool(caso.get("TbCasoDtencer"))
                         badge = ('<span style="background:#f8d7da;color:#721c24;padding:2px 8px;'
                                  'border-radius:12px;font-size:12px">🔴 Encerrado</span>'
                                  if enc else
@@ -62,12 +63,17 @@ def show():
                     acomps = get(f"/acompanhamentos/caso/{num_caso}")
                     if acomps:
                         df = pd.DataFrame(acomps)
-                        cols_disp = ["tbcodigo", "TbAcompdata", "TbAcompAcao",
-                                     "TbCaraterAtendimento", "TbTecnicoResponsavel",
-                                     "TbAcompStatus", "TbAcompPrazo"]
-                        df = df[[c for c in cols_disp if c in df.columns]].copy()
-                        df.columns = ["Código", "Data", "Ação", "Caráter",
-                                      "Técnico", "Status", "Prazo"][:len(df.columns)]
+                        # TbAcompStatus é sempre NULL no legado — omitido da tabela
+                        col_map = {
+                            "tbcodigo":             "Código",
+                            "TbAcompdata":          "Data",
+                            "TbAcompAcao":          "Ação",
+                            "TbCaraterAtendimento": "Caráter",
+                            "TbTecnicoResponsavel": "Técnico",
+                            "TbAcompPrazo":         "Prazo",
+                        }
+                        cols_disp = [c for c in col_map if c in df.columns]
+                        df = df[cols_disp].rename(columns=col_map)
 
                         for col_data in ["Data", "Prazo"]:
                             if col_data in df.columns:
@@ -82,7 +88,6 @@ def show():
                                 "Ação": st.column_config.TextColumn("Ação", width="medium"),
                                 "Caráter": st.column_config.TextColumn("Caráter", width="small"),
                                 "Técnico": st.column_config.TextColumn("Técnico"),
-                                "Status": st.column_config.TextColumn("Status", width="small"),
                                 "Prazo": st.column_config.DatetimeColumn("Prazo", format="DD/MM/YYYY"),
                             }
                         )
@@ -121,7 +126,7 @@ def show():
             card_section("Vínculo e Data")
             col1, col2 = st.columns(2)
             num_caso_inc = col1.number_input("Nº do Caso *", min_value=1, step=1)
-            data_acomp   = col2.date_input("Data da Ação *")
+            data_acomp   = col2.date_input("Data da Ação *", format="DD/MM/YYYY")
 
             card_section("Classificação da Ação")
             col3, col4 = st.columns(2)
@@ -134,7 +139,7 @@ def show():
 
             card_section("Prazo e Status")
             col5, col6 = st.columns(2)
-            prazo  = col5.date_input("Prazo (opcional)", value=None)
+            prazo  = col5.date_input("Prazo (opcional)", value=None, format="DD/MM/YYYY")
             status = col6.selectbox("Status", ["", "Pendente", "Em andamento", "Concluído"])
 
             card_section("Relatório")
@@ -150,7 +155,7 @@ def show():
         if salvar:
             if not relato:
                 st.error("⚠️ O campo Relatório é obrigatório.")
-            elif tipo_acao == "Encaminhamento" and not orgao:
+            elif "encaminhamento" in tipo_acao.lower() and not orgao:
                 st.error("⚠️ Informe o órgão quando a ação for 'Encaminhamento'.")
             else:
                 with st.spinner("Salvando..."):

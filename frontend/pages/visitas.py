@@ -52,14 +52,14 @@ def show():
             card_section("Identificação")
             instituicao = st.text_input("Nome da Instituição *", placeholder="Ex: Delegacia da Mulher")
             col1, col2 = st.columns(2)
-            dt_visita   = col1.date_input("Data da Visita *")
+            dt_visita   = col1.date_input("Data da Visita *", format="DD/MM/YYYY")
             responsavel = col2.text_input("Responsável pela Instituição")
             assunto     = st.text_input("Assunto da Visita *", placeholder="Ex: Reunião de alinhamento")
 
             card_section("Relatório")
             relatorio = st.text_area("Relatório *", height=130,
                                      placeholder="Descreva o que foi tratado na visita...")
-            lembrete  = st.date_input("Lembrete (opcional)", value=None)
+            lembrete  = st.date_input("Lembrete (opcional)", value=None, format="DD/MM/YYYY")
 
             salvar = st.button("💾 Registrar Visita", use_container_width=True, type="primary")
 

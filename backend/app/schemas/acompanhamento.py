@@ -42,12 +42,14 @@ class AcompanhamentoCreate(AcompanhamentoBase):
     @model_validator(mode="after")
     def validar_encaminhamento(self):
         """
-        Validação cruzada: ação "Encaminhamento" exige que o órgão seja informado.
-        model_validator(mode="after") roda depois de todos os campos serem validados,
-        ideal para regras que dependem de mais de um campo simultaneamente.
+        Validação cruzada: ações de encaminhamento exigem órgão de destino.
+        Usa checagem parcial (case-insensitive) porque o banco legado tem
+        variações como "Encaminhamento para outro órgão", "Encaminhamento", etc.
         """
-        if self.TbAcompAcao == "Encaminhamento" and not self.TbAcompOrgao:
-            raise ValueError("Órgão é obrigatório quando a ação é Encaminhamento")
+        if (self.TbAcompAcao
+                and "encaminhamento" in self.TbAcompAcao.lower()
+                and not self.TbAcompOrgao):
+            raise ValueError("Órgão é obrigatório quando a ação é de encaminhamento")
         return self
 
     @field_validator("TbAcompdata")

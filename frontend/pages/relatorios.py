@@ -9,8 +9,8 @@ API_BASE = "http://localhost:8000"
 
 def _periodo_cols(key_prefix):
     col1, col2 = st.columns(2)
-    dt_ini = col1.date_input("De", value=datetime.today() - timedelta(days=365), key=f"{key_prefix}_ini")
-    dt_fim = col2.date_input("Até", value=datetime.today(), key=f"{key_prefix}_fim")
+    dt_ini = col1.date_input("De", value=datetime.today() - timedelta(days=365), key=f"{key_prefix}_ini", format="DD/MM/YYYY")
+    dt_fim = col2.date_input("Até", value=datetime.today(), key=f"{key_prefix}_fim", format="DD/MM/YYYY")
     return dt_ini, dt_fim
 
 
@@ -62,12 +62,16 @@ def show():
                 st.metric("Total de Casos Ativos", total)
                 if casos:
                     df = pd.DataFrame(casos)
-                    cols = ["TbCasoNumCaso", "tbnomeidoso", "TbCasoMunicipio",
-                            "TbCasoTecnicoResp", "ultima_acao", "ultima_data_acomp"]
-                    df = df[[c for c in cols if c in df.columns]]
-                    df.columns = ["Nº Caso", "Idoso", "Município", "Técnico",
-                                  "Última Ação", "Data Último Acomp."][:len(df.columns)]
-                    st.dataframe(df, use_container_width=True)
+                    col_map = {
+                        "TbCasoNumCaso":        "Nº Caso",
+                        "tbnomeidoso":          "Idoso",
+                        "TbCasoMunicipio":      "Município",
+                        "TbCasoTecnicoResp":    "Técnico",
+                        "ultima_acao":          "Última Ação",
+                        "ultima_data_acomp":    "Data Último Acomp.",
+                    }
+                    cols_disp = [c for c in col_map if c in df.columns]
+                    st.dataframe(df[cols_disp].rename(columns=col_map), use_container_width=True)
                     _csv_link("/relatorios/csv/casos-ativos", "casos_ativos")
             except Exception as e:
                 st.error(f"Erro: {e}")
@@ -84,12 +88,16 @@ def show():
                 st.metric(f"Casos Parados (≥ {dias} dias)", total)
                 if casos:
                     df = pd.DataFrame(casos)
-                    cols = ["TbCasoNumCaso", "tbnomeidoso", "TbCasoMunicipio",
-                            "TbCasoTecnicoResp", "ultima_data_acomp", "dias_sem_acomp"]
-                    df = df[[c for c in cols if c in df.columns]]
-                    df.columns = ["Nº Caso", "Idoso", "Município", "Técnico",
-                                  "Último Acomp.", "Dias Parado"][:len(df.columns)]
-                    st.dataframe(df, use_container_width=True)
+                    col_map = {
+                        "TbCasoNumCaso":        "Nº Caso",
+                        "tbnomeidoso":          "Idoso",
+                        "TbCasoMunicipio":      "Município",
+                        "TbCasoTecnicoResp":    "Técnico",
+                        "ultima_data_acomp":    "Último Acomp.",
+                        "dias_sem_acomp":       "Dias Parado",
+                    }
+                    cols_disp = [c for c in col_map if c in df.columns]
+                    st.dataframe(df[cols_disp].rename(columns=col_map), use_container_width=True)
                     _csv_link("/relatorios/csv/casos-parados", "casos_parados", {"dias": dias})
             except Exception as e:
                 st.error(f"Erro: {e}")
@@ -230,11 +238,15 @@ def show():
                 if registros:
                     with st.expander("Ver lista completa"):
                         df_r = pd.DataFrame(registros)
-                        cols = ["tbcodigo", "TbAcomCaso", "TbAcompdata",
-                                "TbAcompAcao", "TbTecnicoResponsavel"]
-                        df_r = df_r[[c for c in cols if c in df_r.columns]]
-                        df_r.columns = ["Código", "Caso", "Data", "Ação", "Técnico"][:len(df_r.columns)]
-                        st.dataframe(df_r, use_container_width=True)
+                        col_map = {
+                            "tbcodigo":             "Código",
+                            "TbAcomCaso":           "Caso",
+                            "TbAcompdata":          "Data",
+                            "TbAcompAcao":          "Ação",
+                            "TbTecnicoResponsavel": "Técnico",
+                        }
+                        cols_disp = [c for c in col_map if c in df_r.columns]
+                        st.dataframe(df_r[cols_disp].rename(columns=col_map), use_container_width=True)
             except Exception as e:
                 st.error(f"Erro: {e}")
 

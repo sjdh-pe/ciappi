@@ -69,7 +69,7 @@ def show():
 
             card_section("Dados de Realização")
             col1, col2 = st.columns(2)
-            dt_prevista = col1.date_input("Data Prevista *")
+            dt_prevista = col1.date_input("Data Prevista *", format="DD/MM/YYYY")
             municipio   = col2.selectbox("Município *", [""] + municipios(), key="evento_mun")
             local       = st.text_input("Local do Evento", placeholder="Endereço ou nome do local")
 

@@ -83,7 +83,8 @@ def atualizar_caso(db: Session, num_caso: int, data: CasoUpdate) -> Caso:
         setattr(caso, campo, valor)
 
     # ── Detecta se está encerrando AGORA (não estava encerrado antes) ─────────
-    ja_estava_encerrado = caso.TbCasoEncerrado == "Sim"
+    # TbCasoEncerrado é NULL em todo o legado — usa TbCasoDtencer como fonte de verdade
+    ja_estava_encerrado = caso.TbCasoDtencer is not None
     encerrando_agora = encerra_dt and encerra_mot and not ja_estava_encerrado
 
     # Marca o caso como encerrado
@@ -136,7 +137,8 @@ def restaurar_caso(db: Session, num_caso: int, motivo_restauracao: int) -> Caso:
         raise ValueError("Caso não encontrado.")
 
     # Limpa os campos de encerramento → caso volta a "em aberto"
-    caso.TbCasoEncerrado = "Não"
+    # TbCasoEncerrado não era preenchido no legado, mantemos NULL para consistência
+    caso.TbCasoEncerrado = None
     caso.TbCasoDtencer = None
     caso.TbCasoMotivoEncerramento = None
 
@@ -166,11 +168,15 @@ def listar_casos(
     # Cada filtro é adicionado condicionalmente — se não foi passado, é ignorado
     if municipio:
         q = q.filter(Caso.TbCasoMunicipio.ilike(f"%{municipio}%"))
-    if encerrado is not None:
-        q = q.filter(Caso.TbCasoEncerrado == encerrado)
+    if encerrado == "Sim":
+        # Legado nunca preencheu TbCasoEncerrado — usa TbCasoDtencer como fonte de verdade
+        q = q.filter(Caso.TbCasoDtencer.isnot(None))
+    elif encerrado == "Não":
+        q = q.filter(Caso.TbCasoDtencer.is_(None))
     if tecnico:
         q = q.filter(Caso.TbCasoTecnicoResp.ilike(f"%{tecnico}%"))
     if motivo:
+        # TbCasoMotivoAtendimento armazena o código numérico como string
         q = q.filter(Caso.TbCasoMotivoAtendimento == motivo)
 
     return q.order_by(Caso.TbCasoDtinicio.desc()).offset(skip).limit(limit).all()

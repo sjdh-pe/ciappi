@@ -13,6 +13,7 @@ from app.models.usuario import Usuario
 from app.models.evento import Evento
 from app.models.visita_inst import VisitaInst
 from app.models.visita_ilpi import VisitaILPI
+from app.models.tabelas_aux import MotivoAtendimento, MotivoEncerramento
 
 router = APIRouter(prefix="/relatorios", tags=["Relatórios"])
 
@@ -172,9 +173,7 @@ def casos_ativos(db: Session = Depends(get_db), _=Depends(get_current_user)):
 
     casos = (
         db.query(Caso)
-        .filter(
-            (Caso.TbCasoEncerrado.is_(None)) | (Caso.TbCasoEncerrado == "Não")
-        )
+        .filter(Caso.TbCasoDtencer.is_(None))   # legado: TbCasoEncerrado sempre NULL
         .all()
     )
 
@@ -246,9 +245,7 @@ def casos_parados(
     rows = (
         db.query(Caso, subq.c.ultima_data)
         .outerjoin(subq, Caso.TbCasoNumCaso == subq.c.TbAcomCaso)
-        .filter(
-            (Caso.TbCasoEncerrado.is_(None)) | (Caso.TbCasoEncerrado == "Não")
-        )
+        .filter(Caso.TbCasoDtencer.is_(None))   # legado: TbCasoEncerrado sempre NULL
         .filter(
             (subq.c.ultima_data.is_(None)) | (subq.c.ultima_data < corte)
         )
@@ -287,7 +284,8 @@ def encerrados(
     """
     data_ref = func.coalesce(Caso.TbCasoDtencer, Caso.TbCasoDtinicio)
 
-    q = db.query(Caso).filter(Caso.TbCasoEncerrado == "Sim")
+    # Legado: TbCasoEncerrado sempre NULL — usa TbCasoDtencer como fonte de verdade
+    q = db.query(Caso).filter(Caso.TbCasoDtencer.isnot(None))
     if dt_ini:
         q = q.filter(data_ref >= dt_ini)
     if dt_fim:
@@ -310,12 +308,13 @@ def encerrados_resolutividade(
     """
     data_ref = func.coalesce(Caso.TbCasoDtencer, Caso.TbCasoDtinicio)
 
+    # Legado: TbCasoEncerrado sempre NULL — usa TbCasoDtencer como fonte de verdade
     q_resumo = (
         db.query(
             Caso.TbCasoMotivoEncerramento,
             func.count(Caso.TbCasoNumCaso).label("total"),
         )
-        .filter(Caso.TbCasoEncerrado == "Sim")
+        .filter(Caso.TbCasoDtencer.isnot(None))
         .filter(Caso.TbCasoMotivoEncerramento.isnot(None))
         .group_by(Caso.TbCasoMotivoEncerramento)
     )
@@ -326,26 +325,41 @@ def encerrados_resolutividade(
 
     q_detalhe = (
         db.query(Caso)
-        .filter(Caso.TbCasoEncerrado == "Sim")
+        .filter(Caso.TbCasoDtencer.isnot(None))
     )
     if dt_ini:
         q_detalhe = q_detalhe.filter(data_ref >= dt_ini)
     if dt_fim:
         q_detalhe = q_detalhe.filter(data_ref <= dt_fim)
 
+    # Mapa código → descrição (tabela pequena, carregada em memória)
+    motivos_enc = {m.Codigo: m.descricaomotivo
+                   for m in db.query(MotivoEncerramento).all()}
+    motivos_at  = {str(m.Codigo): m.TbDescricaoMotivo
+                   for m in db.query(MotivoAtendimento).all()}
+
     return {
         "resumo_por_motivo": [
-            {"motivo_encerramento": r.TbCasoMotivoEncerramento, "total": r.total}
+            {
+                "motivo_encerramento": motivos_enc.get(
+                    r.TbCasoMotivoEncerramento,
+                    f"Código {r.TbCasoMotivoEncerramento}"   # fallback se código não mapeado
+                ),
+                "total": r.total,
+            }
             for r in q_resumo.all()
         ],
         "casos": [
             {
                 "TbCasoNumCaso": c.TbCasoNumCaso,
                 "tbnomeidoso": c.tbnomeidoso,
-                # Mostra TbCasoDtencer real; se NULL, exibe TbCasoDtinicio como referência
                 "TbCasoDtencer": _dt(c.TbCasoDtencer or c.TbCasoDtinicio),
-                "TbCasoMotivoAtendimento": c.TbCasoMotivoAtendimento,
-                "TbCasoMotivoEncerramento": c.TbCasoMotivoEncerramento,
+                "TbCasoMotivoAtendimento": motivos_at.get(
+                    str(c.TbCasoMotivoAtendimento), c.TbCasoMotivoAtendimento
+                ),
+                "TbCasoMotivoEncerramento": motivos_enc.get(
+                    c.TbCasoMotivoEncerramento, c.TbCasoMotivoEncerramento
+                ),
             }
             for c in q_detalhe.all()
         ],
@@ -398,19 +412,37 @@ def por_tipo_violencia(
     db: Session = Depends(get_db),
     _=Depends(get_current_user),
 ):
-    """Contagem de casos por tipo/motivo de violência no período."""
+    """
+    Contagem de casos por tipo/motivo de violência no período.
+    TbCasoMotivoAtendimento armazena o código numérico (FK) como string —
+    faz JOIN com MotivoAtendimento para exibir a descrição.
+    Quando o código não tem correspondência na tabela, exibe o código bruto.
+    """
+    # Mapa código → descrição em memória (tabela pequena, ~50 registros)
+    motivos = {str(m.Codigo): m.TbDescricaoMotivo
+               for m in db.query(MotivoAtendimento).all()}
+
     q = (
         db.query(
             Caso.TbCasoMotivoAtendimento,
             func.count(Caso.TbCasoNumCaso).label("total"),
         )
+        .filter(Caso.TbCasoMotivoAtendimento.isnot(None))
         .group_by(Caso.TbCasoMotivoAtendimento)
     )
     if dt_ini:
         q = q.filter(Caso.TbCasoDtinicio >= dt_ini)
     if dt_fim:
         q = q.filter(Caso.TbCasoDtinicio <= dt_fim)
-    return [{"tipo_violencia": r.TbCasoMotivoAtendimento, "total": r.total} for r in q.all()]
+
+    return [
+        {
+            "tipo_violencia": motivos.get(r.TbCasoMotivoAtendimento,
+                                          r.TbCasoMotivoAtendimento),
+            "total": r.total,
+        }
+        for r in q.all()
+    ]
 
 
 @router.get("/violencia-bairro")
@@ -470,25 +502,30 @@ def acompanhamentos_periodo(
     registros = q.all()
 
     # Agrega por caráter de atendimento
+    # ~32% dos registros legados têm TbCaraterAtendimento NULL — usa coalesce para
+    # exibi-los como "Não informado" em vez de quebrar o gráfico de pizza
+    carater_label = func.coalesce(Acompanhamento.TbCaraterAtendimento, "Não informado")
     q_carater = (
         db.query(
-            Acompanhamento.TbCaraterAtendimento,
+            carater_label.label("carater"),
             func.count(Acompanhamento.tbcodigo).label("total"),
         )
-        .group_by(Acompanhamento.TbCaraterAtendimento)
+        .group_by(carater_label)
     )
     if dt_ini:
         q_carater = q_carater.filter(Acompanhamento.TbAcompdata >= dt_ini)
     if dt_fim:
         q_carater = q_carater.filter(Acompanhamento.TbAcompdata <= dt_fim)
 
-    # Agrega por tipo de ação
+    # Agrega por tipo de ação (filtra NULL — não ocorre nos dados, mas por segurança)
     q_acao = (
         db.query(
             Acompanhamento.TbAcompAcao,
             func.count(Acompanhamento.tbcodigo).label("total"),
         )
+        .filter(Acompanhamento.TbAcompAcao.isnot(None))
         .group_by(Acompanhamento.TbAcompAcao)
+        .order_by(func.count(Acompanhamento.tbcodigo).desc())
     )
     if dt_ini:
         q_acao = q_acao.filter(Acompanhamento.TbAcompdata >= dt_ini)
@@ -498,7 +535,7 @@ def acompanhamentos_periodo(
     return {
         "total": len(registros),
         "por_carater": [
-            {"carater": r.TbCaraterAtendimento, "total": r.total}
+            {"carater": r.carater, "total": r.total}
             for r in q_carater.all()
         ],
         "por_acao": [
@@ -617,6 +654,7 @@ def por_origem(db: Session = Depends(get_db), _=Depends(get_current_user)):
             Caso.TbCasoChegouPrograma,
             func.count(Caso.TbCasoNumCaso).label("total"),
         )
+        .filter(Caso.TbCasoChegouPrograma.isnot(None))
         .group_by(Caso.TbCasoChegouPrograma)
         .order_by(func.count(Caso.TbCasoNumCaso).desc())
         .all()
